@@ -1,6 +1,7 @@
 package com.ksying.mybatis.util;
 
-import com.kkb.mybatis.framework.sqlsource.ParameterMapping;
+
+import com.ksying.mybatis.framework.sqlsource.ParameterMapping;
 
 import java.util.ArrayList;
 import java.util.List;
