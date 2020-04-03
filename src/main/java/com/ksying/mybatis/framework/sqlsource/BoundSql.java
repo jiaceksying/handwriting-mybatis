@@ -1,5 +1,6 @@
 package com.ksying.mybatis.framework.sqlsource;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
  * @version v1.0 , 2020/3/26 16:11
  */
 @Data
+@AllArgsConstructor
 public class BoundSql {
     private String sql;
 

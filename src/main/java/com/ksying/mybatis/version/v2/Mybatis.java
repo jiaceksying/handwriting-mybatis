@@ -12,11 +12,13 @@ import com.ksying.mybatis.framework.sqlsource.DynamicSqlSource;
 import com.ksying.mybatis.framework.sqlsource.ParameterMapping;
 import com.ksying.mybatis.framework.sqlsource.RawSqlSource;
 import com.ksying.mybatis.framework.sqlsource.iface.SqlSource;
+import com.ksying.mybatis.pojo.User;
 import com.ksying.mybatis.util.OgnlUtils;
 import com.ksying.mybatis.util.SimpleTypeRegistry;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.dom4j.*;
 import org.dom4j.io.SAXReader;
+import org.junit.Test;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -42,7 +44,7 @@ public class Mybatis {
      * 获取并解析xml配置文件,封装为一个Configuration对象
      */
     private void loadConfiguration() {
-        String location = "mybatis-comfig.xml";
+        String location = "mybatis-config.xml";
         InputStream inputStream = parseXml(location);
         // 解析xml文件，获得document对象
         Document document = createDocument(inputStream);
@@ -51,7 +53,7 @@ public class Mybatis {
 
     private void loadConfigurationElement(Element rootElement) {
         // 解析 environment 标签，获取数据源信息，并封装到configuration中
-        Element environments = rootElement.element("environment");
+        Element environments = rootElement.element("environments");
         parseEnvironments(environments);
         // 解析 mappers 标签，获取 mapper.xml 路径，进一步解析mapper.xml
         Element mappers = rootElement.element("mappers");
@@ -119,8 +121,7 @@ public class Mybatis {
         } else {
             sqlSource = new RawSqlSource(rootSqlNode);
         }
-
-        return null;
+        return sqlSource;
     }
 
     private MixedSqlNode parseDynamicTags(Element element) {
@@ -263,6 +264,7 @@ public class Mybatis {
             for (int i = 1; i <= columnCount; i++) {
                 String columnName = metaData.getColumnName(i);
                 Field field = resultTypeClass.getDeclaredField(columnName);
+                field.setAccessible(true);
                 field.set(result, rs.getObject(columnName));
             }
             results.add(result);
@@ -286,7 +288,6 @@ public class Mybatis {
     }
 
 
-
     private Connection getConnection(DataSource dataSource) {
         try {
             Connection connection = dataSource.getConnection();
@@ -297,5 +298,13 @@ public class Mybatis {
         return null;
     }
 
-
+    @Test
+    public void test1() throws Exception {
+        loadConfiguration();
+        User user = new User();
+        user.setId(1);
+        user.setName("zhangsan");
+        List<Object> list = (List<Object>) selectList("test.findUserByIdAndName", user);
+        System.out.println(list);
+    }
 }
