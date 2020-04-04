@@ -48,7 +48,7 @@ public class Mybatis {
             preparedStatement = connection.prepareStatement(sql);
             // 处理参数类型及其Class对象
             String paramType = properties.getProperty("db.sql." + statementId + ".parametertype");
-            Class paramObjectClass = Class.forName(paramType);
+            Class<?> paramObjectClass = Class.forName(paramType);
             // 处理参数
             if (SimpleTypeRegistry.isSimpleType(paramObjectClass)) {
                 preparedStatement.setObject(1, paramObject);
@@ -67,9 +67,9 @@ public class Mybatis {
             rs = preparedStatement.executeQuery();
             // 获取返回类型及其Class对象
             String resultType = properties.getProperty("db.sql." + statementId + ".resultclassname");
-            Class resultClass = Class.forName(resultType);
+            Class<?> resultClass = Class.forName(resultType);
             // 处理返回结果
-            Object result = null;
+            Object result;
             while (rs.next()) {
                 result = resultClass.newInstance();
                 ResultSetMetaData metaData = rs.getMetaData();
