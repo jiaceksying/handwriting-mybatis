@@ -13,7 +13,6 @@ import com.ksying.mybatis.framework.sqlsource.ParameterMapping;
 import com.ksying.mybatis.framework.sqlsource.RawSqlSource;
 import com.ksying.mybatis.framework.sqlsource.iface.SqlSource;
 import com.ksying.mybatis.pojo.User;
-import com.ksying.mybatis.util.OgnlUtils;
 import com.ksying.mybatis.util.SimpleTypeRegistry;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.dom4j.*;
@@ -63,7 +62,7 @@ public class Mybatis {
 
     private void parseMappers(Element mappers) {
         List<Element> mapperList = mappers.elements();
-        mapperList.forEach(mapper -> parseMapper(mapper));
+        mapperList.forEach(this::parseMapper);
     }
 
     private void parseMapper(Element mapper) {
@@ -78,8 +77,7 @@ public class Mybatis {
         namespace = rootElement.attributeValue("namespace");
         // 处理select标签
         List<Element> selectList = rootElement.elements("select");
-        selectList
-                .forEach(element -> parseStatementElement(element));
+        selectList.forEach(this::parseStatementElement);
     }
 
     private void parseStatementElement(Element element) {
@@ -89,10 +87,10 @@ public class Mybatis {
             statementId = namespace + "." + statementId;
             // 参数类型
             String paramType = element.attributeValue("parameterType");
-            Class parameterTypeClass = resolveType(paramType);
+            Class<?> parameterTypeClass = resolveType(paramType);
             // 返回类型
             String resultType = element.attributeValue("resultType");
-            Class resultTypeClass = resolveType(resultType);
+            Class<?> resultTypeClass = resolveType(resultType);
             // statementType 指定创建的statement类型 prepareStatement statement ..
             String statementType = element.attributeValue("statementType");
             statementType = statementType == null || "".equals(statementType) ? "prepared" : statementType;
@@ -109,8 +107,7 @@ public class Mybatis {
     }
 
     private SqlSource createSqlSource(Element element) {
-        SqlSource sqlSource = parseScriptNode(element);
-        return sqlSource;
+        return parseScriptNode(element);
     }
 
     private SqlSource parseScriptNode(Element element) {
@@ -155,9 +152,8 @@ public class Mybatis {
                     MixedSqlNode mixedSqlNode = parseDynamicTags(ifElement);
                     IfSqlNode ifSqlNode = new IfSqlNode(test, mixedSqlNode);
                     sqlNodes.add(ifSqlNode);
-                } else if ("where".equals(node.getName())) {
-                    // todo
                 }
+                // todo where foreach 等标签
 
             }
         }
@@ -165,10 +161,9 @@ public class Mybatis {
 
     }
 
-    private Class resolveType(String paramType) {
+    private Class<?> resolveType(String paramType) {
         try {
-            Class clazz = Class.forName(paramType);
-            return clazz;
+            return Class.forName(paramType);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -191,7 +186,7 @@ public class Mybatis {
     private void parseDataSource(Element element) {
         Element dataSourceElement = element.element("dataSource");
         String type = dataSourceElement.attributeValue("type");
-        if (type.equals("DBCP")) {
+        if ("DBCP".equals(type)) {
             BasicDataSource dataSource = new BasicDataSource();
             Properties properties = parseProperty(dataSourceElement);
             dataSource.setDriverClassName(properties.getProperty("driver"));
@@ -219,8 +214,7 @@ public class Mybatis {
     private Document createDocument(InputStream inputStream) {
         try {
             SAXReader saxReader = new SAXReader();
-            Document document = saxReader.read(inputStream);
-            return document;
+            return saxReader.read(inputStream);
         } catch (DocumentException e) {
             e.printStackTrace();
         }
@@ -228,12 +222,11 @@ public class Mybatis {
     }
 
     private InputStream parseXml(String location) {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(location);
-        return inputStream;
+        return this.getClass().getClassLoader().getResourceAsStream(location);
     }
 
     public List<?> selectList(String statementId, Object paramObject) throws Exception {
-        List results = new ArrayList();
+        List<Object> results = new ArrayList<>();
         // 获取连接
         Connection connection = getConnection(configuration.getDataSource());
 
@@ -254,9 +247,9 @@ public class Mybatis {
         return results;
     }
 
-    private void handleResult(ResultSet rs, MappedStatement mappedStatement, List results) throws Exception {
-        Class resultTypeClass = mappedStatement.getResultTypeClass();
-        Object result = null;
+    private void handleResult(ResultSet rs, MappedStatement mappedStatement, List<Object> results) throws Exception {
+        Class<?> resultTypeClass = mappedStatement.getResultTypeClass();
+        Object result;
         while (rs.next()) {
             result = resultTypeClass.newInstance();
             ResultSetMetaData metaData = rs.getMetaData();
@@ -273,7 +266,7 @@ public class Mybatis {
 
     private void handleParameter(PreparedStatement preparedStatement, BoundSql boundSql,
                                  MappedStatement mappedStatement, Object paramObject) throws Exception {
-        Class parameterTypeClass = mappedStatement.getParameterTypeClass();
+        Class<?> parameterTypeClass = mappedStatement.getParameterTypeClass();
         if (SimpleTypeRegistry.isSimpleType(parameterTypeClass)) {
             preparedStatement.setObject(1, paramObject);
         } else {
@@ -290,8 +283,7 @@ public class Mybatis {
 
     private Connection getConnection(DataSource dataSource) {
         try {
-            Connection connection = dataSource.getConnection();
-            return connection;
+            return dataSource.getConnection();
         } catch (SQLException e) {
             e.printStackTrace();
         }
