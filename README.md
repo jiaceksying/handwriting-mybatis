@@ -4,7 +4,7 @@ write simply mybatis framework by yourself
 # mybatis
 - The v1 version simply encapsulates the functions of JDBC
 - The v2 version uses process-oriented to implement the core functions of mybatis
-- The v3 version uses OOP to achieve the core functions of mybatis
+- The v3 version uses OOP to achieve the core functions of mybatis(only a test class, need dependency handwriting-mybatis-framework propject)
 
 # mybatis core function describe
 ## Configuration
